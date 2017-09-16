@@ -14,18 +14,12 @@ def kernel(a, b):
     sqdist = np.sum((a - b) ** 2)
     return np.exp(-.5 * (1/param) * sqdist)
 
-def ucb(u, stdv, k=0.1):
-    return u + k * stdv
-
-def ei(u, stdv, best):
-    if stdv == 0.:
-        return 0.
-    else:
-        Z = (u - best) / stdv
-        return (u - best) * norm.cdf(Z) + stdv * norm.pdf(Z)
-
 X = {
     'x' : np.linspace(-3, 3, 40),
     'y' : np.linspace(-3, 3, 40)
     }
-print(optimize(f, X, kernel, ei, 100))
+
+x_best, y = optimize(f, X, kernel, 'ei', 10)
+
+print("x_best = {}".format(x_best))
+print("f(x_best) = {}".format(y))
