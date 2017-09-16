@@ -2,8 +2,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
+from bayes.acquisition import poi, ucb, ei
+
 class BayesOptimalization:
     def __init__(self, input_space, kernel, acquisition):
+        if type(acquisition) == str:
+            assert acquisition in ['poi', 'ei', 'ucb']
+            if acquisition == 'poi':
+                acquisition = poi
+            elif acquisition == 'ucb':
+                acquisition = ucb(1.)
+            elif acquisition == 'ei':
+                acquisition = ei
+
         self._init = False
         self._kernel = self._kernel_matrix(kernel)
         self._acquisition = acquisition
@@ -11,6 +22,9 @@ class BayesOptimalization:
         self._X_names = [name for name in input_space]
         self._X = np.array(list(itertools.product(*[input_space[name] for name in self._X_names])))
         self._K_ss = self._kernel(self._X, self._X)
+
+        self._K = np.array([])
+        self._K_s = np.array([])
 
         self._Xsamples = []
         self._ysamples = []
@@ -39,14 +53,10 @@ class BayesOptimalization:
         ytrain = self._ysamples
         bestY = np.max(ytrain)
 
-        K = self._kernel(Xtrain, Xtrain)
-        K += 1e-6 * np.eye(len(Xtrain))
-        K_inv = np.linalg.inv(K)
-
-        K_s = self._kernel(self._X, Xtrain)
+        K_inv = np.linalg.inv(self._K)
 
         u = np.matmul(np.matmul(K_s, K_inv), ytrain)
-        s2 = np.diag(K_ss) - np.diag(np.matmul(np.matmul(K_s, K_inv), K_s.T))
+        s2 = np.diag(K_ss) - np.diag(np.matmul(np.matmul(self._K_s, K_inv), self._K_s.T))
         stdv = np.sqrt(s2)
 
         '''
@@ -70,8 +80,25 @@ class BayesOptimalization:
 
     def set_value(self, x, y):
         self.init = True
-        self._Xsamples.append([x[name] for name in self._X_names])
+
+        x_vec = [x[name] for name in self._X_names]
+
+        if self._K.shape != (0,):
+            self._K = np.append(self._K, self._kernel([x_vec], self._Xsamples), axis=0)
+
+        self._Xsamples.append(x_vec)
         self._ysamples.append(y)
+
+        if self._K.shape == (0,):
+            self._K = self._kernel(self._Xsamples, [x_vec])
+        else:
+            self._K = np.append(self._K, self._kernel(self._Xsamples, [x_vec]), axis=1)
+        self._K[-1, -1] += 1e-6
+
+        if self._K_s.shape == (0,):
+            self._K_s = self._kernel([x_vec], self._X)
+        else:
+            self._K_s = np.append(self._K_s, self._kernel([x_vec], self._X), axis=0)
 
     def get_best(self):
         Xtrain = self._Xsamples
