@@ -32,3 +32,8 @@ def ei(**kwargs):
     Z = (mean - best_y) / std
     return (mean - best_y) * norm.cdf(Z) + std * norm.pdf(Z)
 
+'''
+Implements dummy random acquisition function
+'''
+def random(**kwargs):
+    return np.random.rand()

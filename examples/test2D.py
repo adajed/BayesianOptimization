@@ -19,7 +19,7 @@ X = {
     'y' : np.linspace(-3, 3, 40)
     }
 
-x_best, y = optimize(f, X, kernel, 'ei', 10)
+x_best, y = optimize(f, X, 'se', 'ei', 10)
 
 print("x_best = {}".format(x_best))
 print("f(x_best) = {}".format(y))

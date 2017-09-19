@@ -30,20 +30,14 @@ def model(input):
     optimizer = tf.train.GradientDescentOptimizer(lr).minimize(loss)
 
     with tf.Session() as sess:
+        # initialize variables
         sess.run(tf.global_variables_initializer())
 
         for e in range(int(epochs)):
-            #  print('Starting epoch nr {}'.format(e))
             total_batch = int(mnist.train.num_examples / bs)
-            avg_loss = 0.
             for i in range(total_batch):
                 X_batch, y_batch = mnist.train.next_batch(int(bs))
-                _, c = sess.run([optimizer, loss], feed_dict={X: X_batch, y: y_batch})
-
-                avg_loss += c
-                if i % 100 == 0:
-                    #  print('Avarage loss: {}'.format(avg_loss / 100.))
-                    avg_loss = 0.
+                sess.run(optimizer, feed_dict={X: X_batch, y: y_batch})
 
         correct = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
         accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
@@ -60,11 +54,6 @@ X_inputs = {
         'epochs' : range(1, 5)
         }
 
-def kernel(a, b):
-    param = 0.1
-    sqdist = np.sum((a - b) ** 2)
-    return np.exp(-.5 * (1/param) * sqdist)
-
-x_best, acc = bayes.optimize(model, X_inputs, kernel, 'poi', 10)
+x_best, acc = bayes.optimize(model, X_inputs, 'm52', 'ei', 10)
 print("x_best = {}".format(x_best))
 print("accuracy = {}".format(acc))

@@ -2,18 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
-from bayes.acquisition import poi, ucb, ei
+from bayes.acquisition import poi, ucb, ei, random
+from bayes.kernel import Kse, Km52
 
 class BayesOptimalization:
     def __init__(self, input_space, kernel, acquisition):
         if type(acquisition) == str:
-            assert acquisition in ['poi', 'ei', 'ucb']
+            assert acquisition in ['poi', 'ei', 'ucb', 'rand']
             if acquisition == 'poi':
                 acquisition = poi
             elif acquisition == 'ucb':
                 acquisition = ucb(1.)
             elif acquisition == 'ei':
                 acquisition = ei
+            elif acquisition == 'rand':
+                acquisition = random
+
+        if type(kernel) == str:
+            assert kernel in ['se', 'm52']
+            if kernel == 'se':
+                kernel = Kse([1.] * (len(input_space) + 1))
+            elif kernel == 'm52':
+                kernel = Km52([1.] * (len(input_space) + 1))
 
         self._init = False
         self._kernel = self._kernel_matrix(kernel)
